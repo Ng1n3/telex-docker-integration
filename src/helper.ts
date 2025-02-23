@@ -1,14 +1,26 @@
+interface webhookPayload {
+  event_name: string;
+  message: string;
+  status: 'success' | 'error' | 'warning';
+  username: string;
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+
 export const WEBHOOK_URL =
   'https://ping.telex.im/v1/webhooks/019533f0-9c57-73da-a217-788efd707793';
-const WEBHOOK_DATA = {
-  event_name: 'container_metrics',
-  message: 'Metrics fetched successfully',
-  status: 'success',
-  username: 'collins',
-};
+
+  const createWebHookPayload = (eventName: string, message: string, status: webhookPayload['status'] = 'success', metadata?: Record<string, any>):webhookPayload => ({
+  event_name: eventName,
+  message,
+  status,
+  username: 'muyiwa',
+  timestamp: new Date().toISOString(),
+  metadata
+})
 
 // Function to send webhook
-export const sendWebhook = async () => {
+export const sendWebhook = async (pyaload: webhookPayload) => {
   try {
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
@@ -16,13 +28,14 @@ export const sendWebhook = async () => {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(WEBHOOK_DATA),
+      body: JSON.stringify(pyaload),
     });
 
     const result = await response.json();
     console.log('Webhook sent successfully:', result);
   } catch (error) {
     console.error('Failed to send webhook:', error);
+    throw error;
   }
 };
 
