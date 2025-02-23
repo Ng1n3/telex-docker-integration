@@ -11,7 +11,7 @@ const WEBHOOK_DATA = {
 export const sendWebhook = async () => {
   try {
     const response = await fetch(WEBHOOK_URL, {
-      method: 'GET',
+      method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
