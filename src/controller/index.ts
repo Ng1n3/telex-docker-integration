@@ -1,12 +1,10 @@
 import { Request, Response } from 'express';
 import { docker } from '..';
-import { calculateCpuUsage, calculateMemoryUsage } from '../helper';
+import { calculateCpuUsage, calculateMemoryUsage, sendWebhook } from '../helper';
+import integrationData from '../integration.json';
 
-export const getMetrics = async (req: Request, res: Response ) => {
-  console.log('request param: ', req.params);
+export const getMetrics = async (req: Request, res: Response) => {
   const { containerId } = req.params;
-  console.log('containerId', containerId);
-
   try {
     const container = docker.getContainer(containerId);
 
@@ -24,8 +22,19 @@ export const getMetrics = async (req: Request, res: Response ) => {
       memoryUsage: `${memoryUsage}%`,
       status: 'healthy', // Add logic to determine health status
     });
+
+    await sendWebhook();
   } catch (err) {
     console.error('Failed to fetch container metrics:', err);
     res.status(500).json({ error: 'Failed to fetch container metrics' });
+  }
+};
+
+export const getIntegrations = async (req: Request, res: Response) => {
+  try {
+    res.send(integrationData);
+    await sendWebhook()
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch integration data' });
   }
 };

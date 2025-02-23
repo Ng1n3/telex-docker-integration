@@ -1,0 +1,99 @@
+{
+    "data": {
+        "date": {
+            "created_at": "2023-10-01",
+            "updated_at": "2023-10-05"
+        },
+        "descriptions": {
+            "app_description": "Monitor containerized applications for performance, health, and downtime.",
+            "app_logo": "https://example.com/container-monitoring-logo.png",
+            "app_name": "Container Monitoring",
+            "app_url": "https://example.com/container-monitoring",
+            "background_color": "#4A90E2"
+        },
+        "integration_category": "Container Monitoring",
+        "integration_type": "output",
+        "is_active": true,
+        "output": [
+            {
+                "label": "Slack",
+                "value": true
+            },
+            {
+                "label": "Email",
+                "value": true
+            },
+            {
+                "label": "SMS",
+                "value": false
+            }
+        ],
+        "key_features": [
+            "Real-time monitoring of container health and performance.",
+            "Alerts for downtime, high CPU, memory usage, and pod failures.",
+            "Integration with Kubernetes and Docker.",
+            "Log monitoring for containerized applications."
+        ],
+        "permissions": {
+            "monitoring_user": {
+                "always_online": true,
+                "display_name": "Container Performance Monitor"
+            }
+        },
+        "settings": [
+            {
+                "label": "interval",
+                "type": "text",
+                "required": true,
+                "default": "* * * * *",
+                "description": "Cron expression for monitoring intervals (e.g., every minute)."
+            },
+            {
+                "label": "API Key",
+                "type": "text",
+                "required": true,
+                "default": "your-api-key-here",
+                "description": "API key for accessing the container monitoring service."
+            },
+            {
+                "label": "Enable Log Monitoring",
+                "type": "checkbox",
+                "required": true,
+                "default": "Yes",
+                "description": "Enable monitoring of container logs for errors and anomalies."
+            },
+            {
+                "label": "CPU Threshold (%)",
+                "type": "number",
+                "required": true,
+                "default": "80",
+                "description": "Set the CPU usage threshold for alerts."
+            },
+            {
+                "label": "Memory Threshold (%)",
+                "type": "number",
+                "required": true,
+                "default": "80",
+                "description": "Set the memory usage threshold for alerts."
+            },
+            {
+                "label": "Sensitivity Level",
+                "type": "dropdown",
+                "required": true,
+                "default": "Medium",
+                "options": ["High", "Medium", "Low"],
+                "description": "Set the sensitivity level for alerts."
+            },
+            {
+                "label": "Alert Recipients",
+                "type": "multi-checkbox",
+                "required": true,
+                "default": "Super-Admin",
+                "options": ["Super-Admin", "Admin", "Manager", "Developer"],
+                "description": "Select who should receive alerts."
+            }
+        ],
+        "tick_url": "https://example.com/container-monitoring/tick",
+        "target_url": "https://example.com/container-monitoring/data"
+    }
+}
