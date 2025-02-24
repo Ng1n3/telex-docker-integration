@@ -11,13 +11,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.calculateMemoryUsage = exports.calculateCpuUsage = exports.sendWebhook = exports.createWebHookPayload = exports.WEBHOOK_URL = void 0;
 exports.WEBHOOK_URL = 'https://ping.telex.im/v1/webhooks/019533f0-9c57-73da-a217-788efd707793';
-const createWebHookPayload = (eventName, message, status = 'success', metadata) => ({
+const createWebHookPayload = (eventName, message, status = 'success') => ({
     event_name: eventName,
     message,
     status,
     username: 'muyiwa',
-    timestamp: new Date().toISOString(),
-    metadata,
 });
 exports.createWebHookPayload = createWebHookPayload;
 // Function to send webhook

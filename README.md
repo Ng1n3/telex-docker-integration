@@ -1,10 +1,32 @@
-# Container Metrics API
+# Container Metrics API (Local Deployment Only)
 
-This is a Node.js-based API that provides container metrics (CPU and memory usage) for Docker containers. It also includes endpoints for managing containers, fetching integration data, and retrieving system statistics. The API is built using Express and interacts with the Docker daemon via the `dockerode` library.
+## ⚠️ IMPORTANT: This API is designed for local deployment only ⚠️
 
+This API provides container metrics by directly connecting to the Docker daemon through the local Unix socket. Due to this architectural design, __this application must be deployed on the same machine or network where your Docker containers are running__. It cannot be deployed to cloud platforms like Heroku, AWS, or similar services without significant modifications.
+### Why Local Only?
 ---
+This API requires direct access to the Docker daemon socket (/var/run/docker.sock) to:
 
-## Features
+- Fetch container metrics (CPU, memory)
+- Access container logs
+- Manage container lifecycle (stop, restart, delete)
+- List running containers and images
+
+These operations require privileged access that cloud platforms typically don't (and shouldn't) provide for security reasons.
+Deployment Requirements
+
+### Prerequisite
+---
+To run this API, you must have:
+
+1. __Local Docker Installation__: Docker daemon running on the host machine
+2. __Docker Socket Access__: Read/write permissions to ``/var/run/docker.sock``
+3. __Node.js__: Version 16 or higher installed locally
+4. __Network Access__: If monitoring remote Docker hosts, proper network access and Docker daemon configuration
+5. __Package Manager__: [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/) or [pnpm](htps://pnpm.org)
+
+### Features
+---
 
 - **Fetch Container Metrics**: Get CPU and memory usage for a specific Docker container.
 - **Fetch Container Logs**: Retrieve recent logs from a container.
@@ -15,17 +37,71 @@ This is a Node.js-based API that provides container metrics (CPU and memory usag
 - **Webhook Support**: Trigger a webhook for key events like fetching metrics or deleting a container.
 - **System Stats**: Get information about total containers, running/stopped containers, and memory usage.
 
+### Recommended Deployment Methods
+1. __Direct Local Installation__
+``` Clone the repository
+git clone https://github.com/Ng1n3/telex-docker-integration.git
+cd container-metrics-api
+
+# Install dependencies
+npm install
+
+# Start the server
+npm start
+```
+2. __Docker Container (Same Host)__
+``` Build the image
+docker build -t container-metrics-api .
+
+# Run with access to Docker socket
+docker run -d \
+  -p 3200:3200 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --name metrics-api \
+  container-metrics-api
+```
+3. __Docker Compose__
+``` version: '3.8'
+services:
+  metrics-api:
+    build: .
+    ports:
+      - "3200:3200"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+```
+### Security Considerations
 ---
+When running this API:
 
-## Prerequisites
+- Do not expose it directly to the internet
+- Use appropriate firewall rules to restrict access
+- Implement authentication before exposing to other services
+- Consider using HTTPS for any non-localhost access
 
-Before running the project, ensure you have the following installed:
-
-- [Node.js](https://nodejs.org/) (v16 or higher)
-- [Docker](https://www.docker.com/) (to interact with Docker containers)
-- [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/) (package manager)
-
+### Alternative Approaches for Cloud Deployment
 ---
+If you need to monitor containers in a cloud environment, consider:
+
+1. Using cloud-native monitoring solutions:
+
+- AWS CloudWatch for ECS/EKS
+- Azure Monitor for AKS
+- Google Cloud Monitoring for GKE
+
+
+2. Using container orchestration platform metrics:
+
+- Kubernetes Metrics API
+- Docker Swarm metrics
+
+
+3. Implementing platform-specific metrics collection:
+
+- Heroku Metrics API
+- Platform-specific monitoring add-ons
+
 
 ## Installation
 

@@ -19,7 +19,7 @@ const integration_json_1 = __importDefault(require("../integration.json"));
 const getMetrics = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { containerId } = req.params;
     if (!containerId) {
-        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_metrics_error', 'container ID missing', 'error', { containerId }));
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_metrics_error', 'container ID missing', 'error'));
         res.status(400).json({ error: 'containerId is required' });
         return;
     }
@@ -35,15 +35,12 @@ const getMetrics = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             status: 'healthy', // Add logic to determine health status
         };
         res.json(metricsData);
-        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_metrics_fetched', `metrics fetched for container ${containerId}`, 'success', metricsData));
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_metrics_fetched', `metrics fetched for container ${containerId}`, 'success'));
     }
     catch (err) {
         const errorMessage = `Error fetching metrics for container ${containerId}:`;
         console.error(errorMessage, err);
-        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_metrics_error', errorMessage, 'error', {
-            containerId,
-            error: err.message,
-        }));
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_metrics_error', errorMessage, 'error'));
         res.status(500).json({ error: 'Failed to fetch container metrics' });
     }
 });
@@ -51,10 +48,11 @@ exports.getMetrics = getMetrics;
 const getIntegrations = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         res.send(integration_json_1.default);
-        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('integrations_fetched', 'integrations fetched successfully', 'success', { integrations: integration_json_1.default }));
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('integrations_fetched', 'integrations fetched successfully', 'success'));
     }
     catch (error) {
-        console.error(`Error fetching integration data`);
+        console.error(`Error fetching integration data`, error);
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('integrations_error', 'error fetching integrations', 'error'));
         res.status(500).json({ error: 'Failed to fetch integration data' });
     }
 });
@@ -62,6 +60,7 @@ exports.getIntegrations = getIntegrations;
 const getContainerLogs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { containerId } = req.params;
     if (!containerId) {
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_logs_error', 'container ID missing', 'error'));
         res.status(400).json({ error: 'containerId is required' });
     }
     try {
@@ -73,10 +72,12 @@ const getContainerLogs = (req, res) => __awaiter(void 0, void 0, void 0, functio
             tail: 30,
         });
         const logs = logsBuffer.toString('utf8');
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_logs_fetched', 'fetchd container log successfully', 'success'));
         res.json({ containerId, logs });
     }
     catch (error) {
         console.error(`Error fetching logs for container ${containerId}:`, error);
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_logs_error', 'error while fetching container logs', 'error'));
         res.status(500).json({ error: 'failed to fetch container logs' });
     }
 });
@@ -99,13 +100,13 @@ exports.restartContainer = restartContainer;
 const deleteContainer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { containerId } = req.params;
     if (!containerId) {
-        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_metrics_error', 'container ID missing', 'error', { containerId }));
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('delete_container_error', 'container ID missing', 'error'));
         res.status(400).json({ error: 'containerId is required' });
     }
     try {
         const container = __1.docker.getContainer(containerId);
         yield container.remove();
-        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_deleted', `container ${containerId} deleted successfully`, 'success', { containerId }));
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_deleted', `container ${containerId} deleted successfully`, 'success'));
         res.json({
             containerId,
             message: `Container ${containerId} has successfully being deleted.`,
@@ -114,10 +115,7 @@ const deleteContainer = (req, res) => __awaiter(void 0, void 0, void 0, function
     catch (error) {
         const errMessage = `Error deleting for container ${containerId}:`;
         console.error(errMessage, error);
-        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_delete_error', errMessage, 'error', {
-            containerId,
-            error: error.message,
-        }));
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_delete_error', errMessage, 'error'));
         res.status(500).json({ error: 'Failed to remove container' });
     }
 });
@@ -125,13 +123,13 @@ exports.deleteContainer = deleteContainer;
 const stopContainer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { containerId } = req.params;
     if (!containerId) {
-        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_stop_error', `Container ID missing`, 'error', { containerId }));
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_stop_error', `Container ID missing`, 'error'));
         res.status(400).json({ error: 'containerId is required' });
     }
     try {
         const container = __1.docker.getContainer(containerId);
         yield container.stop();
-        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_stopped', `Container ${containerId} stopped successfully`, 'success', { containerId }));
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_stopped', `Container ${containerId} stopped successfully`, 'success'));
         res.json({
             containerId,
             message: `Container ${containerId} has successfully being stopped.`,
@@ -140,10 +138,7 @@ const stopContainer = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     catch (error) {
         const errMessage = `Error stopping container ${containerId}:`;
         console.error(errMessage, error);
-        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_stop_error', errMessage, 'error', {
-            containerId,
-            error: error.message,
-        }));
+        yield (0, helper_1.sendWebhook)((0, helper_1.createWebHookPayload)('container_stop_error', errMessage, 'error'));
         res.status(500).json({ error: 'Failed to stop container' });
     }
 });

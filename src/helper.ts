@@ -3,8 +3,6 @@ interface webhookPayload {
   message: string;
   status: 'success' | 'error' | 'warning';
   username: string;
-  timestamp: string;
-  metadata?: Record<string, any>;
 }
 
 export const WEBHOOK_URL =
@@ -14,14 +12,11 @@ export const createWebHookPayload = (
   eventName: string,
   message: string,
   status: webhookPayload['status'] = 'success',
-  metadata?: Record<string, any>
 ): webhookPayload => ({
   event_name: eventName,
   message,
   status,
   username: 'muyiwa',
-  timestamp: new Date().toISOString(),
-  metadata,
 });
 
 // Function to send webhook
