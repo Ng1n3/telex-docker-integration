@@ -3,7 +3,7 @@ import Docker from 'dockerode';
 import dotenv from 'dotenv';
 import express, { Application, Request, Response } from 'express';
 import helmet from 'helmet';
-import { sendWebhook } from './helper';
+import { createWebHookPayload, sendWebhook } from './helper';
 import router from './routes/router';
 dotenv.config();
 
@@ -30,7 +30,9 @@ app.get('/v1/api', async (req: Request, res: Response) => {
     status: 'OK',
     message: 'Container API is currently running',
   });
-  await sendWebhook();
+  await sendWebhook(
+    createWebHookPayload('api_status', 'API is running smoothly', 'success')
+  );
 });
 
 app.listen(PORT, () => {

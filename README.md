@@ -1,14 +1,19 @@
 # Container Metrics API
 
-This is a Node.js-based API that provides container metrics (CPU and memory usage) for Docker containers. It also includes an endpoint to fetch integration data. The API is built using Express and interacts with the Docker daemon via the `dockerode` library.
+This is a Node.js-based API that provides container metrics (CPU and memory usage) for Docker containers. It also includes endpoints for managing containers, fetching integration data, and retrieving system statistics. The API is built using Express and interacts with the Docker daemon via the `dockerode` library.
 
 ---
 
 ## Features
 
 - **Fetch Container Metrics**: Get CPU and memory usage for a specific Docker container.
-- **Integration Data**: Retrieve integration configuration data from a JSON file.
-- **Webhook Support**: Trigger a webhook when metrics are fetched or the home page is accessed.
+- **Fetch Container Logs**: Retrieve recent logs from a container.
+- **Stop, Restart, and Delete Containers**: Manage container lifecycle.
+- **List Running Containers**: Get a list of all currently running containers.
+- **List Available Docker Images**: Fetch all Docker images present on the host system.
+- **Fetch Integration Data**: Retrieve integration configuration data from a JSON file.
+- **Webhook Support**: Trigger a webhook for key events like fetching metrics or deleting a container.
+- **System Stats**: Get information about total containers, running/stopped containers, and memory usage.
 
 ---
 
@@ -53,24 +58,10 @@ Before running the project, ensure you have the following installed:
 
 ## API Endpoints
 
-### 1. **Home Page**
-- **URL**: `/v1/api`
-- **Method**: `GET`
-- **Description**: Returns a welcome message and triggers a webhook.
-- **Response**:
-  ```json
-  {
-    "status": "OK",
-    "message": "Container API is currently running"
-  }
-  ```
-
-### 2. **Fetch Container Metrics**
-- **URL**: `/v1/api/metrics/:containerId`
+### 1. **Fetch Container Metrics**
+- **URL**: `/metrics/:containerId`
 - **Method**: `GET`
 - **Description**: Fetches CPU and memory usage for a specific Docker container.
-- **Parameters**:
-  - `containerId` (string): The ID of the Docker container.
 - **Response**:
   ```json
   {
@@ -81,117 +72,94 @@ Before running the project, ensure you have the following installed:
   }
   ```
 
-### 3. **Fetch Integration Data**
-- **URL**: `/v1/api/integration.json`
+### 2. **Fetch Integration Data**
+- **URL**: `/integration.json`
 - **Method**: `GET`
-- **Description**: Returns integration configuration data from a JSON file.
+- **Description**: Fetches integration data from `integration.json`.
 - **Response**:
   ```json
   {
-    "integration": {
-      "name": "example",
-      "config": {
-        "key": "value"
-      }
-    }
+    "integrations": [ ... ]
   }
   ```
 
----
+### 3. **Fetch Container Logs**
+- **URL**: `/logs/:containerId`
+- **Method**: `GET`
+- **Description**: Fetches the latest logs from the specified container.
+- **Response**:
+  ```json
+  {
+    "containerId": "abc123",
+    "logs": "...logs here..."
+  }
+  ```
 
-## Webhook Integration
+### 4. **Stop a Container**
+- **URL**: `/container/:containerId/stop`
+- **Method**: `POST`
+- **Description**: Stops the specified container.
 
-The API triggers a webhook whenever:
-- The home page (`/v1/api`) is accessed.
-- The `/metrics/:containerId` endpoint is called.
+### 5. **Restart a Container**
+- **URL**: `/container/:containerId/restart`
+- **Method**: `POST`
+- **Description**: Restarts the specified container.
 
-The webhook sends a POST request to the following URL:
-```
-https://ping.telex.im/v1/webhooks/019533f0-9c57-73da-a217-788efd707793
-```
+### 6. **Delete a Container**
+- **URL**: `/container/:containerId`
+- **Method**: `DELETE`
+- **Description**: Deletes the specified container.
 
-The payload sent to the webhook is:
-```json
-{
-  "event_name": "container_metrics",
-  "message": "Metrics fetched successfully",
-  "status": "success",
-  "username": "collins"
-}
-```
+### 7. **List Running Containers**
+- **URL**: `/containers`
+- **Method**: `GET`
+- **Description**: Lists all currently running containers.
 
----
+### 8. **List Available Docker Images**
+- **URL**: `/images`
+- **Method**: `GET`
+- **Description**: Lists all available Docker images.
 
-## Docker Setup
-
-The API interacts with the Docker daemon using the `dockerode` library. By default, it connects to the Docker socket at `/var/run/docker.sock`. If you're running Docker remotely, update the Docker configuration in `src/index.ts`:
-
-```typescript
-export const docker = new Docker({
-  host: process.env.DOCKER_HOST,
-  port: process.env.DOCKER_PORT,
-  ca: process.env.DOCKER_CA,
-  cert: process.env.DOCKER_CERT,
-  key: process.env.DOCKER_KEY,
-});
-```
-
----
-
-## Environment Variables
-
-| Variable            | Description                          | Default Value               |
-|---------------------|--------------------------------------|-----------------------------|
-| `PORT`              | Port on which the server runs        | `3200`                      |
-| `DOCKER_SOCKET_PATH`| Path to the Docker socket            | `/var/run/docker.sock`      |
-| `DOCKER_HOST`       | Docker host (for remote connections) | -                           |
-| `DOCKER_PORT`       | Docker port (for remote connections) | -                           |
-| `DOCKER_CA`         | Docker CA certificate               | -                           |
-| `DOCKER_CERT`       | Docker client certificate           | -                           |
-| `DOCKER_KEY`        | Docker client key                   | -                           |
+### 9. **Fetch System Stats**
+- **URL**: `/container/stats`
+- **Method**: `GET`
+- **Description**: Fetches Docker system statistics including total containers, running/stopped containers, and memory limit.
 
 ---
 
-## Running Tests
+## Webhook Events
 
-To run tests, use the following command:
-```bash
-npm test
-```
+The API triggers webhook events for key actions:
+
+- `container_metrics_fetched` - When metrics are successfully retrieved.
+- `container_deleted` - When a container is deleted.
+- `container_stop_error` - If an error occurs when stopping a container.
+- `container_stopped` - When a container is successfully stopped.
+- `container_restart_error` - If an error occurs when restarting a container.
+- `container_restarted` - When a container is successfully restarted.
+- `container_logs_fetched` - When logs are successfully retrieved.
+
+---
+
+## Running with Docker
+
+To run this API inside a Docker container:
+
+1. **Build the Docker image**:
+   ```bash
+   docker build -t container-metrics-api .
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -p 3200:3200 -v /var/run/docker.sock:/var/run/docker.sock container-metrics-api
+   ```
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please follow these steps:
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Submit a pull request with a detailed description of your changes.
+If you would like to contribute, feel free to submit a pull request or open an issue.
 
----
 
-## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
-
-- [Express](https://expressjs.com/) for the web framework.
-- [Dockerode](https://github.com/apocas/dockerode) for interacting with Docker.
-- [Axios](https://axios-http.com/) for making HTTP requests.
-
----
-
-## Support
-
-For any issues or questions, please open an issue on the [GitHub repository](https://github.com/your-username/container-metrics-api/issues).
-
----
-
-Enjoy using the Container Metrics API! 🚀
-
---- 
-
-This `README.md` provides a comprehensive guide for anyone looking to use or contribute to your project. You can customize it further to suit your specific needs.
