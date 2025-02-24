@@ -63,7 +63,14 @@ export const getMetrics = async (req: Request, res: Response) => {
 export const getIntegrations = async (req: Request, res: Response) => {
   try {
     res.send(integrationData);
-    await sendWebhook();
+    await sendWebhook(
+      createWebHookPayload(
+        'integrations_fetched',
+        'integrations fetched successfully',
+        'success',
+        { integrations: integrationData }
+      )
+    );
   } catch (error) {
     console.error(`Error fetching integration data`);
     res.status(500).json({ error: 'Failed to fetch integration data' });
@@ -176,7 +183,7 @@ export const stopContainer = async (req: Request, res: Response) => {
       message: `Container ${containerId} has successfully being stopped.`,
     });
   } catch (error: any) {
-    const errMessage = `Error stopping container ${containerId}:`
+    const errMessage = `Error stopping container ${containerId}:`;
     console.error(errMessage, error);
     await sendWebhook(
       createWebHookPayload('container_stop_error', errMessage, 'error', {
