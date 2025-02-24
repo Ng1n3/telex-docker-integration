@@ -3,6 +3,7 @@ import { docker } from '..';
 import {
   calculateCpuUsage,
   calculateMemoryUsage,
+  createWebHookPayload,
   sendWebhook,
 } from '../helper';
 import integrationData from '../integration.json';
@@ -10,6 +11,14 @@ import integrationData from '../integration.json';
 export const getMetrics = async (req: Request, res: Response) => {
   const { containerId } = req.params;
   if (!containerId) {
+    await sendWebhook(
+      createWebHookPayload(
+        'container_metrics_error',
+        'container ID missing',
+        'error',
+        { containerId }
+      )
+    );
     res.status(400).json({ error: 'containerId is required' });
     return;
   }
@@ -20,16 +29,33 @@ export const getMetrics = async (req: Request, res: Response) => {
     const cpuUsage = calculateCpuUsage(stats);
     const memoryUsage = calculateMemoryUsage(stats);
 
-    res.json({
+    const metricsData = {
       containerId,
       cpuUsage: `${cpuUsage}%`,
       memoryUsage: `${memoryUsage}%`,
       status: 'healthy', // Add logic to determine health status
-    });
+    };
 
-    await sendWebhook();
-  } catch (err) {
-    console.error(`Error fetching metrics for container ${containerId}:`, err);
+    res.json(metricsData);
+
+    await sendWebhook(
+      createWebHookPayload(
+        'container_metrics_fetched',
+        `metrics fetched for container ${containerId}`,
+        'success',
+        metricsData
+      )
+    );
+  } catch (err: any) {
+    const errorMessage = `Error fetching metrics for container ${containerId}:`;
+    console.error(errorMessage, err);
+
+    await sendWebhook(
+      createWebHookPayload('container_metrics_error', errorMessage, 'error', {
+        containerId,
+        error: err.message,
+      })
+    );
     res.status(500).json({ error: 'Failed to fetch container metrics' });
   }
 };
@@ -83,17 +109,40 @@ export const restartContainer = async (req: Request, res: Response) => {
 export const deleteContainer = async (req: Request, res: Response) => {
   const { containerId } = req.params;
   if (!containerId) {
+    await sendWebhook(
+      createWebHookPayload(
+        'container_metrics_error',
+        'container ID missing',
+        'error',
+        { containerId }
+      )
+    );
     res.status(400).json({ error: 'containerId is required' });
   }
   try {
     const container = docker.getContainer(containerId);
     await container.remove();
+    await sendWebhook(
+      createWebHookPayload(
+        'container_deleted',
+        `container ${containerId} deleted successfully`,
+        'success',
+        { containerId }
+      )
+    );
     res.json({
       containerId,
       message: `Container ${containerId} has successfully being deleted.`,
     });
-  } catch (error) {
-    console.error(`Error deleting for container ${containerId}:`, error);
+  } catch (error: any) {
+    const errMessage = `Error deleting for container ${containerId}:`;
+    console.error(errMessage, error);
+    await sendWebhook(
+      createWebHookPayload('container_delete_error', errMessage, 'error', {
+        containerId,
+        error: error.message,
+      })
+    );
     res.status(500).json({ error: 'Failed to remove container' });
   }
 };
@@ -101,17 +150,40 @@ export const deleteContainer = async (req: Request, res: Response) => {
 export const stopContainer = async (req: Request, res: Response) => {
   const { containerId } = req.params;
   if (!containerId) {
+    await sendWebhook(
+      createWebHookPayload(
+        'container_stop_error',
+        `Container ID missing`,
+        'error',
+        { containerId }
+      )
+    );
     res.status(400).json({ error: 'containerId is required' });
   }
   try {
     const container = docker.getContainer(containerId);
     await container.stop();
+    await sendWebhook(
+      createWebHookPayload(
+        'container_stopped',
+        `Container ${containerId} stopped successfully`,
+        'success',
+        { containerId }
+      )
+    );
     res.json({
       containerId,
       message: `Container ${containerId} has successfully being stopped.`,
     });
-  } catch (error) {
-    console.error(`Error stopping container ${containerId}:`, error);
+  } catch (error: any) {
+    const errMessage = `Error stopping container ${containerId}:`
+    console.error(errMessage, error);
+    await sendWebhook(
+      createWebHookPayload('container_stop_error', errMessage, 'error', {
+        containerId,
+        error: error.message,
+      })
+    );
     res.status(500).json({ error: 'Failed to stop container' });
   }
 };

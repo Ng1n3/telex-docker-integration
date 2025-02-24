@@ -10,7 +10,7 @@ interface webhookPayload {
 export const WEBHOOK_URL =
   'https://ping.telex.im/v1/webhooks/019533f0-9c57-73da-a217-788efd707793';
 
-  const createWebHookPayload = (eventName: string, message: string, status: webhookPayload['status'] = 'success', metadata?: Record<string, any>):webhookPayload => ({
+ export  const createWebHookPayload = (eventName: string, message: string, status: webhookPayload['status'] = 'success', metadata?: Record<string, any>):webhookPayload => ({
   event_name: eventName,
   message,
   status,
